@@ -34,14 +34,15 @@
 	再帰的に略称を展開します。(そのせいでちょっと遅いです)
 
 ## ■動作環境
-	xyzzy-0.2.2.245 での実行は確認しました。
+	xyzzy-0.2.2.245/ 0.2.2.252 での実行を確認しました。
 
 ## ■インストール
 	1. zenexpand-minor-mode.l を site-lisp に置いてください。
 	2. .xyzzy / sitelinit.l に次のように書いてください。
 
 		(require "zenexpand-minor-mode")
-もしくは
+
+	もしくは
 		(export 'ed::zenexpand-minor-mode "ed")
 		(autoload 'zenexpand-minor-mode "zenexpand-minor-mode" t)
 
@@ -55,7 +56,7 @@
 	              ))
 	などと書いてください。
 
-## ■動かし方(2)
+## ■動かし方(2) カーソルジャンプ
 	snippet.l を使うことで、展開時に、カーソルをジャンプすることができるようになります。
 	[zen-snippet-expand]
 	.xyzzy / siteinit.l などで、
@@ -76,7 +77,12 @@
 	{<!DOCTYPE:html>}>html[lang="ja"]>(head>utf8+title+jq)+body>div#content>ul>li*3^(div#a>(ul>li#item01$$*4)+(ol>li#item02$$@-*5))+(div#b)+ta#aa[cols="20"]{this is a sample. }*3
 	などと書いて、カーソルを省略記法の最後のところにある状態で "M-e" を押下すると 展開されます。
 
-## ■そんな呪文覚えるの無理。。。
+## ■って冗談？
+	では行頭で
+	!
+	とだけ打って "M-e" を押下しましょう。そのあと WoW! と叫ぶと展開されます。
+
+## ■いずれにせよ こんな呪文覚えるの無理。。。
 	って方のために簡単にご説明。基本的には、
 		">" で階層を降りる。
 		"+" で同じ階層に継ぎ足す。
@@ -123,7 +129,7 @@
 
 ## ■変更履歴
 	[2014/03/29]
-		・Git 導入。 codebreakにて公開しました。
+		・Git 導入。 codebreak, github にて公開しました。
 	[2014/03/28]
 		・改行ルールを、google html style guide に従うように変更。
 			(要は inline要素以外は new lineにしようね、って仕様です。)
@@ -144,7 +150,7 @@
 		snippet.lとの連携で、カーソルジャンプを可能に。
 	[2014/03/26]
 		text, custom attributes, numberingのデクリメント実装。
-		公開にむけてこの説明書書き始める。
+		公開にむけてこの説明書を書き始める。
 	[2014/03/25]
 		グルーピングやら遡上やら実装。insertできるようになった。
 	[2014/03/24]
@@ -153,7 +159,7 @@
 ## ■License
 	翻訳元に倣い、MITライセンスです。
 
-	Copyright (c) 2014 Satoshi Moriwaki
+	Copyright (c) 2014 Okayu3
 	Released under the MIT license
 	http://opensource.org/licenses/mit-license.php
 

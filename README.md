@@ -129,6 +129,14 @@ $$$           |  "$"を並べれば zero-fill
 5. いろいろ拡張できますが、拡張設定しやすいように作る方法が分からない
    ので次に使うあなたが拡張してくださいね。
 
+### ■設定
+展開するとき、入力したzen-codeを コメントとして残すことができます。
+.xyzzy/siteinit.lに
+```
+(setq ed::*zenexpand-silent* nil)
+```
+と入れていただければ、入力をコメント行にして次の行に展開します。
+
 ### ■由来
 OTCHYさんによる perlによるZen-Coding実装 [SSSCoding.pm](http://www.otchy.net/20100225/zen-coding-for-perl/)
 をベースに Lispで翻訳するところからはじめました。
@@ -168,7 +176,7 @@ lexer/parse/expandがきれいにまとまっていて非常に読みやすか�
 		Lisp思い出すのに四苦八苦。コア部完成。
 
 ### ■License
-	翻訳元に倣い、MITライセンスです。
+翻訳元に倣い、MITライセンスです。
 
 	Copyright (c) 2014 Okayu3
 	Released under the MIT license

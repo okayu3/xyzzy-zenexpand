@@ -1,6 +1,6 @@
 ﻿# zenexpand-minor-mode
 
-## ■zenexpand-minor-mode.l とは？
+### ■zenexpand-minor-mode.l とは？
 これは、xyzzy の拡張プラグインのひとつです。xyzzy をご存じない方は こちらをご覧ください [xyzzyサイト](http://xyzzy-022.github.io/)  
 	Emmet(旧 Zen-Coding) の、HTMLをCSS風の省略記法で書く機能(expand-abbreviation)を実装したものです。例えば、
 ```
@@ -26,13 +26,13 @@ Zen-CodingのSyntaxは
 * [emmet cheat](docs.emmet.io/cheat-sheet/)  
 をご覧ください。
 
-## ■ちょっとした特長
+### ■ちょっとした特長
 再帰的に略称を展開します。(そのせいでちょっと遅いです)
 
-## ■動作環境
+### ■動作環境
 xyzzy-0.2.2.245/ 0.2.2.252 での実行を確認しました。
 
-## ■インストール
+### ■インストール
 1. zenexpand-minor-mode.l を site-lisp に置いてください。
 2. .xyzzy / sitelinit.l に次のように書いてください。
 ```
@@ -43,7 +43,7 @@ xyzzy-0.2.2.245/ 0.2.2.252 での実行を確認しました。
 		(export 'ed::zenexpand-minor-mode "ed")
 		(autoload 'zenexpand-minor-mode "zenexpand-minor-mode" t)
 ```
-## ■動かし方
+### ■動かし方
 "M-x zenexpand-minor-mode" とするか、  
 html+-mode のhookなどに
 ```
@@ -55,7 +55,7 @@ html+-mode のhookなどに
 ```
 などと書いてください。
 
-## ■動かし方(2) カーソルジャンプ
+### ■動かし方(2) カーソルジャンプ
 snippet.l を使うことで、展開時に、カーソルをジャンプすることができるようになります。[zen-snippet-expand]
 .xyzzy / siteinit.l などで、
 ```
@@ -70,19 +70,19 @@ snippet.l を使うことで、展開時に、カーソルをジャンプする�
 [ご注意][autoload された方へ] hookを作ってないので、
    html+-mode-hook など、メジャーモードのhookに上記※1を付け足してください。
 
-## ■使い方
+### ■使い方
 	任意の場所で
 ```
 	{<!DOCTYPE:html>}>html[lang="ja"]>(head>utf8+title+jq)+body>div#content>ul>li*3^(div#a>(ul>li#item01$$*4)+(ol>li#item02$$@-*5))+(div#b)+ta#aa[cols="20"]{this is a sample. }*3
 ```
 	などと書いて、カーソルを省略記法の最後のところにある状態で "M-e" を押下すると 展開されます。
 
-## ■って冗談？
+### ■って冗談？
 	では行頭で
 	!
 	とだけ打って "M-e" を押下しましょう。そのあと WoW! と叫ぶと展開されます。
 
-## ■いずれにせよ こんな呪文覚えるの無理。。。
+### ■いずれにせよ こんな呪文覚えるの無理。。。
 って方のために簡単にご説明。基本的には、
 
    記号       |説明
@@ -111,7 +111,7 @@ $$$           |  "$"を並べれば zero-fill
 詳しくは 下記cheat sheetご参照あれ。  
 [refer] http://docs.emmet.io/cheat-sheet/
 
-## ■問題点
+### ■問題点
 1. 2014/03段階でのEmmet仕様と合わせています。
 2. 未実装機能
   * class/id/text以外の任意の箇所でのナンバリング。また子供への波及。  
@@ -127,7 +127,7 @@ $$$           |  "$"を並べれば zero-fill
 5. いろいろ拡張できますが、拡張設定しやすいように作る方法が分からない
    ので次に使うあなたが拡張してくださいね。
 
-## ■由来
+### ■由来
 OTCHYさんによる perlによるZen-Coding実装 [SSSCoding.pm](http://www.otchy.net/20100225/zen-coding-for-perl/)
 をベースに Lispで翻訳するところからはじめました。
 lexer/parse/expandがきれいにまとまっていて非常に読みやすかったです。
@@ -136,7 +136,7 @@ lexer/parse/expandがきれいにまとまっていて非常に読みやすか�
 	# This source file is subject to the MIT license.  
 	# http://www.otchy.net
 
-## ■変更履歴
+### ■変更履歴
 	[2014/03/29]
 		・Git 導入。 codebreak, github にて公開しました。
 	[2014/03/28]
@@ -165,13 +165,13 @@ lexer/parse/expandがきれいにまとまっていて非常に読みやすか�
 	[2014/03/24]
 		Lisp思い出すのに四苦八苦。コア部完成。
 
-## ■License
+### ■License
 	翻訳元に倣い、MITライセンスです。
 
 	Copyright (c) 2014 Okayu3
 	Released under the MIT license
 	http://opensource.org/licenses/mit-license.php
 
-## ■common Lisp の bugじゃないんだろうけど よく分からないこと
+### ■common Lisp の bugじゃないんだろうけど よく分からないこと
 	・正規表現の "[\]\[]" と "[\[\]]" が違う意味らしい。後者は基本NGです。
 	  →[教訓] 終わり角括弧("]") は 正規表現character classの中では先頭に配置すること。

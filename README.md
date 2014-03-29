@@ -7,17 +7,17 @@
 
 	Emmet(旧 Zen-Coding) の、HTMLをCSS風の省略記法で
 	書く機能(expand-abbreviation)を実装したものです。例えば、
-
+```
 	ul>li#arg$$$*3.small.nav
-
+```
 	というようなことを書けば、キー一発で
-
+```
     <ul>
       <li id="arg001" class="small nav"></li>
       <li id="arg002" class="small nav"></li>
       <li id="arg003" class="small nav"></li>
     </ul>
-
+```
 	のように展開してくれる機能です。
 	Emmet には 他の便利機能も色々ありますが、
 	xyzzy には 誉れ高き YMTZさんの html+-mode がありますので、
@@ -26,8 +26,8 @@
       (また、snippet.lと一緒に使うことでカーソルジャンプもできます。)
 
 	Zen-CodingのSyntaxは
-	http://docs.emmet.io/abbreviations/syntax/
-	http://docs.emmet.io/cheat-sheet/
+	[emmet syntax](http://docs.emmet.io/abbreviations/syntax/)
+	[emmet cheat](http://docs.emmet.io/cheat-sheet/)
 	をご覧ください。
 
 ## ■ちょっとした特長
@@ -37,44 +37,48 @@
 	xyzzy-0.2.2.245/ 0.2.2.252 での実行を確認しました。
 
 ## ■インストール
-	1. zenexpand-minor-mode.l を site-lisp に置いてください。
-	2. .xyzzy / sitelinit.l に次のように書いてください。
-
+1. zenexpand-minor-mode.l を site-lisp に置いてください。
+2. .xyzzy / sitelinit.l に次のように書いてください。
+```
 		(require "zenexpand-minor-mode")
-
-	もしくは
+```
+もしくは
+```
 		(export 'ed::zenexpand-minor-mode "ed")
 		(autoload 'zenexpand-minor-mode "zenexpand-minor-mode" t)
-
+```
 ## ■動かし方
-	"M-x zenexpand-minor-mode" とするか、
-	html+-mode のhookなどに
+  "M-x zenexpand-minor-mode" とするか、
+html+-mode のhookなどに
+```
 	(add-hook '*html+-mode-hook*
 	          #'(lambda ()
 	              ...blah-blah-blah...
 	              (ed::zenexpand-minor-mode)
 	              ))
-	などと書いてください。
+```
+などと書いてください。
 
 ## ■動かし方(2) カーソルジャンプ
-	snippet.l を使うことで、展開時に、カーソルをジャンプすることができるようになります。
-	[zen-snippet-expand]
-	.xyzzy / siteinit.l などで、
-
-	(require "snippet")
-
+snippet.l を使うことで、展開時に、カーソルをジャンプすることができるようになります。[zen-snippet-expand]
+.xyzzy / siteinit.l などで、
+```
+(require "snippet")
+```
 	と読み込んだ上で、
+```
+(define-key ed::*zenexpand-minor-mode-map* '#\M-e 'ed::zen-snippet-expand) ;;※1
+```
+としてください。
 
-	(define-key ed::*zenexpand-minor-mode-map* '#\M-e 'ed::zen-snippet-expand) ;;※1
-
-	としてください。
-
-	[ご注意][autoload された方へ] hookを作ってないので、
-	   html+-mode-hook など、メジャーモードのhookに上記※1を付け足してください。
+[ご注意][autoload された方へ] hookを作ってないので、
+   html+-mode-hook など、メジャーモードのhookに上記※1を付け足してください。
 
 ## ■使い方
 	任意の場所で
+```
 	{<!DOCTYPE:html>}>html[lang="ja"]>(head>utf8+title+jq)+body>div#content>ul>li*3^(div#a>(ul>li#item01$$*4)+(ol>li#item02$$@-*5))+(div#b)+ta#aa[cols="20"]{this is a sample. }*3
+```
 	などと書いて、カーソルを省略記法の最後のところにある状態で "M-e" を押下すると 展開されます。
 
 ## ■って冗談？
@@ -83,48 +87,58 @@
 	とだけ打って "M-e" を押下しましょう。そのあと WoW! と叫ぶと展開されます。
 
 ## ■いずれにせよ こんな呪文覚えるの無理。。。
-	って方のために簡単にご説明。基本的には、
-		">" で階層を降りる。
-		"+" で同じ階層に継ぎ足す。
-		"^" で１つ上の階層に
-		"#" でidを入れる。
-		"." でクラスを指定
-		"*N" (N:integer) で繰返し
-		"$" をいれておけば １から数字をインクリメントして挿入
-		"$@-" とすれば デクリメント
-		[注意]スペース入れると展開できません。
-	詳しくは
-		"(" ")" でグルーピング
-		"{" "}" で内容記載
-		"[" "]" で id/class 以外の属性指定(カスタム属性)
-		$$$ と"$"を並べれば zero-fill
-	以上。あとは HTMLの通常のタグ(またはその省略形)を間にはさめばOK。
-	5分で慣れます。これホント。詳しくは 下記cheat sheetご参照あれ。
-	[refer] http://docs.emmet.io/cheat-sheet/
+って方のために簡単にご説明。基本的には、
+
+   記号       |説明
+--------------|-----------------
+	">"   |階層を降りる。
+	"+"   |同じ階層に継ぎ足す。
+	"^"   |１つ上の階層に
+	"#"   |idを入れる。
+	"."   |クラスを指定
+	"*N"  |(N:integer) 繰返し
+	"$"   |１から数字をインクリメントして挿入
+	"$@-" |デクリメント
+	[注意]スペース入れると展開できません。
+--------------------------------
+
+詳しくは
+
+   記号       |説明
+--------------|-----------------
+"(" ")"       | グルーピング
+"{" "}"       | 内容記載
+"[" "]"       | id/class 以外の属性指定(カスタム属性)
+$$$           |  "$"を並べれば zero-fill
+
+以上。あとは HTMLの通常のタグ(またはその省略形)を間にはさめばOK。  
+5分で慣れます。これホント。  
+詳しくは 下記cheat sheetご参照あれ。  
+[refer] http://docs.emmet.io/cheat-sheet/
 
 ## ■問題点
-	0. 2014/03段階でのEmmet仕様と合わせています。
-	1. 未実装機能
-		a. class/id/text以外の任意の箇所でのナンバリング。また子供への波及。
-		   "h$*3" とか。"ul>li*5>a{Item $}" とか (タグ名や子供への波及)。
-		b. "[～]" のカスタム属性で、ダブルクォーテーションの補填を行う仕様
-	2. おかしいところ
-		・"ul+" "ol+" など "+"のついた略語の解釈が多分間違ってます。(仕様の記載通りなのだけど)
-		  "ul+#$$*3" などは意図した動きだと思いますが、"ul+li" などは完全におかしい。
-		  "ul++li" とか "ul+^ol" とかで代用できますが、もう訳が分からない。
-		  普段は "ul>li#$$*3"  というような書き方をしてください。ご面倒かけます。
-		・ implicit tag があるとインデントがうまくいかない場合が。
-	3. これは純正品ではありません。
-	4. いろいろ拡張できますが、拡張設定しやすいように作る方法が分からない
-	   ので次に使うあなたが拡張してくださいね。
+1. 2014/03段階でのEmmet仕様と合わせています。
+2. 未実装機能
+  * class/id/text以外の任意の箇所でのナンバリング。また子供への波及。  
+    "h$*3" とか。"ul>li*5>a{Item $}" とか (タグ名や子供への波及)。
+  *. "[～]" のカスタム属性で、ダブルクォーテーションの補填を行う仕様
+3. おかしいところ
+  * "ul+" "ol+" など "+"のついた略語の解釈が多分間違ってます。(仕様の記載通りなのだけど)
+    "ul+#$$*3" などは意図した動きだと思いますが、"ul+li" などは完全におかしい。
+    "ul++li" とか "ul+^ol" とかで代用できますが、もう訳が分からない。
+    普段は "ul>li#$$*3"  というような書き方をしてください。ご面倒かけます。
+  * implicit tag があるとインデントがうまくいかない場合が。
+4. これは純正品ではありません。
+5. いろいろ拡張できますが、拡張設定しやすいように作る方法が分からない
+   ので次に使うあなたが拡張してくださいね。
 
 ## ■由来
-	OTCHYさんによる perlによるZen-Coding実装 "SSSCoding.pm"
-	http://www.otchy.net/20100225/zen-coding-for-perl/
-	をベースに Lispで翻訳するところからはじめました。
-	lexer/parse/expandがきれいにまとまっていて非常に読みやすかったです。
-	# Copyright (c) 2010 Otchy
-	# This source file is subject to the MIT license.
+OTCHYさんによる perlによるZen-Coding実装 [SSSCoding.pm](http://www.otchy.net/20100225/zen-coding-for-perl/)
+をベースに Lispで翻訳するところからはじめました。
+lexer/parse/expandがきれいにまとまっていて非常に読みやすかったです。
+
+	# Copyright (c) 2010 Otchy  
+	# This source file is subject to the MIT license.  
 	# http://www.otchy.net
 
 ## ■変更履歴

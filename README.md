@@ -1,16 +1,12 @@
 ﻿# zenexpand-minor-mode
 
 ## ■zenexpand-minor-mode.l とは？
-
-	これは、xyzzy の拡張プラグインのひとつです。
-	xyzzy をご存じない方は こちらをご覧ください <http://xyzzy-022.github.io/>
-
-	Emmet(旧 Zen-Coding) の、HTMLをCSS風の省略記法で
-	書く機能(expand-abbreviation)を実装したものです。例えば、
+これは、xyzzy の拡張プラグインのひとつです。xyzzy をご存じない方は こちらをご覧ください [xyzzyサイト](http://xyzzy-022.github.io/)  
+	Emmet(旧 Zen-Coding) の、HTMLをCSS風の省略記法で書く機能(expand-abbreviation)を実装したものです。例えば、
 ```
 	ul>li#arg$$$*3.small.nav
 ```
-	というようなことを書けば、キー一発で
+というようなことを書けば、キー一発で
 ```
     <ul>
       <li id="arg001" class="small nav"></li>
@@ -18,23 +14,23 @@
       <li id="arg003" class="small nav"></li>
     </ul>
 ```
-	のように展開してくれる機能です。
-	Emmet には 他の便利機能も色々ありますが、
-	xyzzy には 誉れ高き YMTZさんの html+-mode がありますので、
-	他はいいんじゃね？と思って ここだけ実装しました。
-	html+-mode と一緒に使うと楽できると思います。
-      (また、snippet.lと一緒に使うことでカーソルジャンプもできます。)
+のように展開してくれる機能です。
+Emmet には 他の便利機能も色々ありますが、
+xyzzy には 誉れ高き YMTZさんの html+-mode がありますので、
+他はいいかな？と思って ここだけ実装しました。
+minor-modeですので、html+-mode と一緒に使うと楽できると思います。
+(また、snippet.lと一緒に使うことでカーソルジャンプもできます。)
 
-	Zen-CodingのSyntaxは
-	[emmet syntax](http://docs.emmet.io/abbreviations/syntax/)
-	[emmet cheat](http://docs.emmet.io/cheat-sheet/)
-	をご覧ください。
+Zen-CodingのSyntaxは
+* [emmet syntax](docs.emmet.io/abbreviations/syntax/)
+* [emmet cheat](docs.emmet.io/cheat-sheet/)  
+をご覧ください。
 
 ## ■ちょっとした特長
-	再帰的に略称を展開します。(そのせいでちょっと遅いです)
+再帰的に略称を展開します。(そのせいでちょっと遅いです)
 
 ## ■動作環境
-	xyzzy-0.2.2.245/ 0.2.2.252 での実行を確認しました。
+xyzzy-0.2.2.245/ 0.2.2.252 での実行を確認しました。
 
 ## ■インストール
 1. zenexpand-minor-mode.l を site-lisp に置いてください。
@@ -48,7 +44,7 @@
 		(autoload 'zenexpand-minor-mode "zenexpand-minor-mode" t)
 ```
 ## ■動かし方
-  "M-x zenexpand-minor-mode" とするか、
+"M-x zenexpand-minor-mode" とするか、  
 html+-mode のhookなどに
 ```
 	(add-hook '*html+-mode-hook*
@@ -100,7 +96,6 @@ snippet.l を使うことで、展開時に、カーソルをジャンプする�
 	"$"   |１から数字をインクリメントして挿入
 	"$@-" |デクリメント
 	[注意]スペース入れると展開できません。
---------------------------------
 
 詳しくは
 

@@ -56,12 +56,12 @@ html+-mode のhookなどに
 などと書いてください。
 
 ### ■動かし方(2) カーソルジャンプ
-snippet.l を使うことで、展開時に、カーソルをジャンプすることができるようになります。[zen-snippet-expand]
+snippet.l を使うことで、展開時に、カーソルをジャンプすることができるようになります。[zen-snippet-expand]  
 .xyzzy / siteinit.l などで、
 ```
 (require "snippet")
 ```
-	と読み込んだ上で、
+と読み込んだ上で、
 ```
 (define-key ed::*zenexpand-minor-mode-map* '#\M-e 'ed::zen-snippet-expand) ;;※1
 ```

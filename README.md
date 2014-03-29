@@ -15,9 +15,6 @@
     </ul>
 ```
 のように展開してくれる機能です。
-Emmet には 他の便利機能も色々ありますが、
-xyzzy には 誉れ高き YMTZさんの html+-mode がありますので、
-他はいいかな？と思って ここだけ実装しました。
 minor-modeですので、html+-mode と一緒に使うと楽できると思います。
 (また、snippet.lと一緒に使うことでカーソルジャンプもできます。)
 
@@ -154,8 +151,9 @@ lexer/parse/expandがきれいにまとまっていて非常に読みやすか�
 			(要は inline要素以外は new lineにしようね、って仕様です。)
 			[ref] http://google-styleguide.googlecode.com/svn/trunk/htmlcssguide.xml#HTML_Style_Rules
 			まとめると、次のようになります。
-			1. 子要素が全部inline要素の場合は改行しない。
-			2. それ以外の場合、inline 要素の次がblock-level要素の場合改行を入れる。
+			1. 子要素が全部inline要素の場合は各子要素の末尾では改行しない。
+			2. それ以外の場合、子のinline 要素について、次がblock-level要素の場合改行を入れる。
+			3. 子要素のblock-level要素の末尾は必ず改行を入れる。
 		・indent も自前で実装
 		・サイレントモード実装。zen-codeを残す/消すの制御ができます。
 		・グルーピングの繰り返しに対応。(dt+dd)*3 のような。

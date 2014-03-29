@@ -71,16 +71,18 @@ snippet.l を使うことで、展開時に、カーソルをジャンプする�
    html+-mode-hook など、メジャーモードのhookに上記※1を付け足してください。
 
 ### ■使い方
-	任意の場所で
+任意の場所で
 ```
-	{<!DOCTYPE:html>}>html[lang="ja"]>(head>utf8+title+jq)+body>div#content>ul>li*3^(div#a>(ul>li#item01$$*4)+(ol>li#item02$$@-*5))+(div#b)+ta#aa[cols="20"]{this is a sample. }*3
+{<!DOCTYPE:html>}>html[lang="ja"]>(head>utf8+title+jq)+body>div#content>ul>li*3^(div#a>(ul>li#item01$$*4)+(ol>li#item02$$@-*5))+(div#b)+ta#aa[cols="20"]{this is a sample. }*3
 ```
-	などと書いて、カーソルを省略記法の最後のところにある状態で "M-e" を押下すると 展開されます。
+などと書いて、カーソルを省略記法の最後のところにある状態で "M-e" を押下すると 展開されます。
 
 ### ■って冗談？
-	では行頭で
-	!
-	とだけ打って "M-e" を押下しましょう。そのあと WoW! と叫ぶと展開されます。
+では行頭で
+```
+!
+```
+とだけ打って "M-e" を押下しましょう。そのあと WoW! と叫ぶと展開されます。
 
 ### ■いずれにせよ こんな呪文覚えるの無理。。。
 って方のために簡単にご説明。基本的には、

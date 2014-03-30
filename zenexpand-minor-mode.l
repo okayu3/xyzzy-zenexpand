@@ -2,7 +2,7 @@
 ;;;
 ;;; This file is not part of xyzzy.
 ;;;
-;; $Id: zenexpand-minor-mode.l,v 0.004 2014/03/26 16:35:44 okayu3 Exp $
+;; $Id: zenexpand-minor-mode.l,v 0.006 2014/03/30 22:45:10 okayu3 Exp $
 ;;
 ;; zenexpand-minor-mode.l
 ;;
@@ -22,11 +22,8 @@
 ;;    </ul>
 ;;
 ;;	のように展開してくれる機能です。
-;;	Emmet には 他の便利機能も色々ありますが、
-;;	xyzzy には 誉れ高き YMTZさんの html+-mode がありますので、
-;;	他はいいんじゃね？と思って ここだけ実装しました。
-;;	html+-mode と一緒に使うと楽できると思います。
-;;      (また、snippet.lと一緒に使うことでカーソルジャンプもできます。)
+;;	minor-modeで実装していますので html+-mode と一緒に使うと楽できると思います。  
+;;	(また、snippet.lと一緒に使うことでカーソルジャンプもできます。)
 ;;
 ;;	Zen-CodingのSyntaxは
 ;;	http://docs.emmet.io/abbreviations/syntax/
@@ -37,7 +34,7 @@
 ;;	再帰的に略称を展開します。(そのせいでちょっと遅いです)
 ;;
 ;; ■動作環境
-;;	xyzzy-0.2.2.245 での実行は確認しました。
+;;	xyzzy-0.2.2.245/0.2.2.252 での実行は確認しました。
 ;;
 ;; ■インストール
 ;;	1. zenexpand-minor-mode.l を site-lisp に置いてください。
@@ -102,9 +99,8 @@
 ;; ■問題点
 ;;	0. 2014/03段階でのEmmet仕様と合わせています。
 ;;	1. 未実装機能
-;;		a. class/id/text以外の任意の箇所でのナンバリング。また子供への波及。
-;;		   "h$*3" とか。"ul>li*5>a{Item $}" とか (タグ名や子供への波及)。
-;;		b. "[～]" のカスタム属性で、ダブルクォーテーションの補填を行う仕様
+;;		a. "[～]" のカスタム属性で、ダブルクォーテーションの補填を行う仕様
+;;		b. 属性の textmate 風の デフォルト値指定
 ;;	2. おかしいところ
 ;;		・"ul+" "ol+" など "+"のついた略語の解釈が多分間違ってます。(仕様の記載通りなのだけど)
 ;;		  "ul+#$$*3" などは意図した動きだと思いますが、"ul+li" などは完全におかしい。
@@ -114,6 +110,14 @@
 ;;	3. これは純正品ではありません。
 ;;	4. いろいろ拡張できますが、拡張設定しやすいように作る方法が分からない
 ;;	   ので次に使うあなたが拡張してくださいね。
+;;
+;; ■設定
+;;	展開するとき、入力したzen-codeを コメントとして残すことができます。  
+;;	.xyzzy/siteinit.lに
+;;	```
+;;	(setq ed::*zenexpand-silent* nil)
+;;	```
+;;	と入れていただければ、入力をコメント行にして次の行に展開します。
 ;;
 ;; ■由来
 ;;	OTCHYさんによる perlによるZen-Coding実装 "SSSCoding.pm"
@@ -125,6 +129,11 @@
 ;;	# http://www.otchy.net
 ;;
 ;; ■変更履歴
+;;	[2014/03/30]
+;;		・class/id/text以外の任意の箇所(タグ名/属性)でのナンバリング。また子供への波及。
+;;		  "h$*3" とか。"ul>li*5>a{Item $}" とか (タグ名や子供への波及)。
+;;		・implicit tag の包括的解決。implicit tag利用時にインデントがうまくいかなかった件の解消
+;;		・unit test 作成 [zen-test]
 ;;	[2014/03/29]
 ;;		・Git 導入。 codebreakにて公開しました。
 ;;	[2014/03/28]
@@ -172,7 +181,8 @@
           zen-expand-and-insert
           zen-snippet-expand
           zen-expand
-          zenexpand-minor-mode))
+          zenexpand-minor-mode
+          zen-test))
 
 ;; マイナーモードのOn・Offを管理するバッファローカルな変数を宣言
 ;; (マイナーモードの状態は、バッファごとに管理する)
@@ -195,7 +205,6 @@
 (unless *zenexpand-minor-mode-map*
   (setq *zenexpand-minor-mode-map* (make-sparse-keymap))
   (define-key *zenexpand-minor-mode-map* #\M-e 'zen-expand-and-insert)
-  ;;  (define-key *zenexpand-minor-mode-map* #\M-e 'zen-expand)
   )
 
 ;;単独で(閉じタグなしで)使われるタグ
@@ -416,7 +425,7 @@
           (setf expand-str (zen-item-indent-local expand-str setback t))
           (backward-delete-char-untabify len-real)
           (when (not *zenexpand-silent*)
-            (insert (concat "<!-- " input "-->"))
+            (insert (concat "<!-- " (substitute-string (or input "") "_@_" " ") "-->"))
             (if (not (string-match "^\n" expand-str)) (insert "\n")))
           ;;          (setf expand-str (substitute-string expand-str "\\@N" "$0"))
           (setf expand-str (substitute-string expand-str "\"\"" "\"@N\""))
@@ -425,7 +434,7 @@
           (define-abbrev *local-abbrev-table* "zenexpand-wk" expand-str)
           (setf *snippet-select* "zenexpand-wk")
           (snippet-expand)
-          ;;major-mode の indent-regionを使います。html-modeにはないのかな？
+          ;;major-mode の indent-regionを使うのをやめました。
           ;;(ignore-errors (indent-region (point-min) (point-max)))
           )
       (message "[ZEN]illegal format...")
@@ -448,11 +457,11 @@
           (setf expand-str (zen-item-indent-local expand-str setback t))
           (backward-delete-char-untabify len-real)
           (when (not *zenexpand-silent*)
-            (insert (concat "<!-- " input "-->"))
+            (insert (concat "<!-- " (substitute-string (or input "") "_@_" " ") "-->"))
             (if (not (string-match "^\n" expand-str)) (insert "\n")))
           (setf expand-str (substitute-string expand-str "\\@N" ""))
           (insert expand-str)
-          ;;major-mode の indent-regionを使います。html-modeにはないのかな？
+          ;;major-mode の indent-regionを使うのをやめました。
           ;;(ignore-errors (indent-region (point-min) (point-max)))
           ;;(goto-char loc)
           )
@@ -470,8 +479,10 @@
     ;;parse します。
     (setf root (zen-parser lst-token))
     ;;(princ root)
+    ;;implicit tag の解決
+    (zen-resolve-implicit-tag root nil)
     ;;root から文字列を出す
-    (setf ans (zen-item-tostring root nil))
+    (setf ans (zen-item-tostring root nil 1))
     );;when
   ans)
 
@@ -782,36 +793,34 @@
 ;;文字列へ変換します。
 ;; itm : 対象のノード
 ;; parent-nm : 親のタグ名。implicit tagname を判断するのに使います。
-(defun zen-item-tostring (itm parent-nm)
+(defun zen-item-tostring (itm parent-nm parent-cnt)
   (let (ans
         (typ (aref itm 0))
         (nm (aref itm 1))
         (scale (aref itm 4))
         scale-val
         )
+    (if (not (null scale))
+        (setf scale-val (parse-integer scale :junk-allowed t))
+      (setf scale-val 1))
     (cond ((equal "ROOT" typ)
            (let ((children (reverse (aref itm 6))))
              (dolist (one children)
-               (setf ans (concat ans (zen-item-tostring one nm))))))
+               (setf ans (concat ans (zen-item-tostring one nm scale-val))))))
           ((equal "ELEMENT" typ)
-           (if scale
+           (if (> scale-val 0)
                (progn
-                 (setf scale-val  (parse-integer scale :junk-allowed t))
                  (dotimes (i scale-val)
-                   (setf ans (concat ans (zen-item-tostring-detail itm (+ i 1) scale-val parent-nm)))
+                   (setf ans (concat ans (zen-item-tostring-detail itm (+ i 1) scale-val parent-nm parent-cnt)))
                    )
                  )
-             (setf ans (concat ans (zen-item-tostring-detail itm -1 -1 parent-nm)))
+             (setf ans (concat ans (zen-item-tostring-detail itm -1 -1 parent-nm parent-cnt)))
              ))
           ((equal "GROUP" typ)
-           (setf scale-val
-                 (if scale
-                     (parse-integer scale :junk-allowed t)
-                   1))
            (let ((children (reverse (aref itm 6))))
              (dotimes (i scale-val)
                (dolist (one children)
-                 (setf ans (concat ans (zen-item-tostring one nm)))
+                 (setf ans (concat ans (zen-item-tostring one nm i)))
                  ))))
       )
     ans)
@@ -822,7 +831,7 @@
 ;; cnt : numbering時の繰り替えし数 (1～scale-val)
 ;; scale-val : numbering 数
 ;; parent-nm : 親のタグ名。implicit tagname を判断するのに使います。
-(defun zen-item-tostring-detail (itm cnt scale-val parent-nm)
+(defun zen-item-tostring-detail (itm cnt scale-val parent-nm parent-cnt)
   (let* ((nm (aref itm 1))
          (id (aref itm 2))
          (lst-class (aref itm 3))
@@ -831,32 +840,25 @@
          (lst-cattr (aref itm 7))
          (lst-text (aref itm 8))
          (ans nil)
+;;         (nm (zen-item-resolve-implicit-tag nm-base parent-nm id lst-class lst-cattr))
          (flg-inline (zen-is-inline-element nm))
          (flg-has-block-child (zen-item-has-block-elem children))
          )
 ;;    (setf flg-inline nil)
-    (if (and (null nm)
-             (or   (not (null id))
-                   (> (length lst-class) 0)
-                   (> (length lst-cattr) 0))
-             )
-        (progn
-          (setf nm (zen-item-resolve-implicit-tag parent-nm))
-          (setf flg-inline (zen-is-inline-element nm))))
-
     ;;(format nil "~VA" setback " ")
-
     (when nm
+      (setf nm (zen-item-resolve-dollar nm cnt scale-val parent-cnt))
       (setf ans (concat "<" nm)))
     (if id
-        (setf ans (concat ans " id=\"" (zen-item-dsc-id itm cnt scale-val) "\"")))
+        (setf ans (concat ans " id=\"" (zen-item-dsc-id itm cnt scale-val parent-cnt) "\"")))
     (if (> (length lst-class) 0)
-        (setf ans (concat ans " class=\"" (zen-item-dsc-class itm cnt scale-val) "\"")))
+        (setf ans (concat ans " class=\"" (zen-item-dsc-class itm cnt scale-val parent-cnt) "\"")))
     (if attr
         (setf ans (concat ans " " attr)))
     (if (> (length lst-cattr) 0)
         (dolist (one-cattr lst-cattr)
           (setf one-cattr (substitute-string one-cattr "_@_" " "))
+          (setf one-cattr (zen-item-resolve-dollar one-cattr cnt scale-val parent-cnt))
           (setf ans (concat ans " " one-cattr))))
     (when (zen-is-single nm)
       (setf ans (concat ans " />"))
@@ -871,7 +873,7 @@
     (when (> (length lst-text) 0)
       (dolist (one-text lst-text)
         (setf one-text (substitute-string one-text "_@_" " "))
-        (setf one-text (zen-item-resolve-dollar one-text cnt scale-val))
+        (setf one-text (zen-item-resolve-dollar one-text cnt scale-val parent-cnt))
         (setf cr (if (and flg-has-block-child
                           (not (zen-item-is-inline (car children))))
                      "\n"
@@ -884,7 +886,7 @@
     (dotimes (i (length children))
       (let* ((one (nth i children))
              (two (nth (+ i 1) children))
-             (child-dsc (zen-item-tostring one nm)))
+             (child-dsc (zen-item-tostring one nm cnt)))
         (setf cr (if (and flg-has-block-child
                           (zen-item-is-inline one)
                           (not (zen-item-is-inline two)))
@@ -957,18 +959,22 @@
 (defun zen-item-has-block-elem (children)
   ;;なので dolistでごまかす
   (dolist (itm children)
+    (if (zen-item-is-group itm)
+        (return-from zen-item-has-block-elem t))
     (setf nm (aref itm 1))
     (if (not (zen-is-inline-element nm))
         (return-from zen-item-has-block-elem t)))
   nil)
 
 ;;id名の解決
-(defun zen-item-dsc-id (itm cnt scale-val)
+(defun zen-item-dsc-id (itm cnt scale-val parent-scale-val)
   (let ((nm (aref itm 2)))
-    (zen-item-resolve-dollar nm cnt scale-val)))
+    (zen-item-resolve-dollar nm cnt scale-val parent-scale-val)))
 
 ;;numberingの解決
-(defun zen-item-resolve-dollar (nm cnt scale-val)
+(defun zen-item-resolve-dollar (nm cnt scale-val parent-scale-val)
+  (when (> parent-scale-val cnt)
+    (setf cnt parent-scale-val))
   (when (string-match "\\$\\@\\([0-9]+\\)" nm)
     (let* ((lbl-start (match-string 1))
            (lbl-start-val (parse-integer lbl-start :junk-allowed t)))
@@ -1008,38 +1014,62 @@
          (concat (car lst) sep (zen-string-join (cdr lst) sep)))))
 
 ;;クラス名の解決
-(defun zen-item-dsc-class (itm cnt scale-val)
+(defun zen-item-dsc-class (itm cnt scale-val parent-scale-val)
   (let ((ans "")
         (classes (aref itm 3)))
     (setf ans (zen-string-join classes " "))
-    (zen-item-resolve-dollar ans cnt scale-val)))
+    (zen-item-resolve-dollar ans cnt scale-val parent-scale-val)))
 
 ;;implicit tagの解決
-(defun zen-item-resolve-implicit-tag (parent-nm)
-  (setf nm "div")
-  (cond ((equal parent-nm "ul")
-         (setf nm "li"))
-        ((equal parent-nm "ol")
-         (setf nm "li"))
-        ((equal parent-nm "dl")
-         (setf nm "dt"))
-        ((equal parent-nm "table")
-         (setf nm "tr"))
-        ((equal parent-nm "tbody")
-         (setf nm "tr"))
-        ((equal parent-nm "thead")
-         (setf nm "tr"))
-        ((equal parent-nm "tfoot")
-         (setf nm "tr"))
-        ((equal parent-nm "tr")
-         (setf nm "td"))
-        ((equal parent-nm "select")
-         (setf nm "option"))
-        ((equal parent-nm "optgroup")
-         (setf nm "option"))
-        ((equal parent-nm "em")
-         (setf nm "span")))
-  nm)
+(defun zen-resolve-implicit-tag (itm parent-nm)
+  (let ((nm (zen-item-resolve-implicit-tag itm parent-nm))
+        (children (reverse (aref itm 6))))
+    (setf (aref itm 1) nm)
+    (dolist (child children)
+      (zen-resolve-implicit-tag child nm)
+      )
+    )
+  )
+
+
+(defun zen-item-resolve-implicit-tag (itm parent-nm)
+  (let ((nm-base (aref itm 1))
+        (id (aref itm 2))
+         (lst-class (aref itm 3))
+         (lst-cattr (aref itm 7))
+        nm
+        )
+    (if (not (null nm-base)) (setf nm nm-base))
+    (when (and (null nm-base)
+               (or   (not (null id))
+                     (> (length lst-class) 0)
+                     (> (length lst-cattr) 0))
+               )
+      (setf nm "div")
+      (cond ((equal parent-nm "ul")
+             (setf nm "li"))
+            ((equal parent-nm "ol")
+             (setf nm "li"))
+            ((equal parent-nm "dl")
+             (setf nm "dt"))
+            ((equal parent-nm "table")
+             (setf nm "tr"))
+            ((equal parent-nm "tbody")
+             (setf nm "tr"))
+            ((equal parent-nm "thead")
+             (setf nm "tr"))
+            ((equal parent-nm "tfoot")
+             (setf nm "tr"))
+            ((equal parent-nm "tr")
+             (setf nm "td"))
+            ((equal parent-nm "select")
+             (setf nm "option"))
+            ((equal parent-nm "optgroup")
+             (setf nm "option"))
+            ((equal parent-nm "em")
+             (setf nm "span")))
+      )
+    nm))
 
 ;; numbering for snippet.l
 ;; 最初は $N 形式でOK。その後 ${N: default} 形式に対応する予定。
@@ -1094,3 +1124,44 @@
         (setf matched (substitute-string matched "\\}" "\\\\}"))
         (setf input (substitute-string input matched de-empty)))))
   input)
+
+(defun zen-test ()
+  (setq tests
+        '(("nav>ul>li" "<nav>\n  <ul>\n    <li>@N</li>\n  </ul>\n</nav>\n")
+          ("div+p+bq" "<div>@N</div>\n<p>@N</p>\n<blockquote>@N</blockquote>\n")
+          ("div+div>p>span+em^bq" "<div>@N</div>\n<div>\n  <p><span>@N</span><em>@N</em></p>\n  <blockquote>@N</blockquote>\n</div>\n")
+          ("div+div>p>span+em^^bq" "<div>@N</div>\n<div>\n  <p><span>@N</span><em>@N</em></p>\n</div>\n<blockquote>@N</blockquote>\n")
+          ("div>(header>ul>li*2>a)+footer>p" "<div>\n  <header>\n    <ul>\n      <li><a href=\"\">@N</a></li>\n      <li><a href=\"\">@N</a></li>\n    </ul>\n  </header>\n  <footer>\n    <p>@N</p>\n  </footer>\n</div>\n")
+          ("(div>dl>(dt+dd)*3)+footer>p" "<div>\n  <dl>\n    <dt>@N</dt>\n    <dd>@N</dd>\n    <dt>@N</dt>\n    <dd>@N</dd>\n    <dt>@N</dt>\n    <dd>@N</dd>\n  </dl>\n</div>\n<footer>\n  <p>@N</p>\n</footer>\n")
+          ("ul>li#itm$$*5>a{Item $}" "<ul>\n  <li id=\"itm01\"><a href=\"\">Item 1</a></li>\n  <li id=\"itm02\"><a href=\"\">Item 2</a></li>\n  <li id=\"itm03\"><a href=\"\">Item 3</a></li>\n  <li id=\"itm04\"><a href=\"\">Item 4</a></li>\n  <li id=\"itm05\"><a href=\"\">Item 5</a></li>\n</ul>\n")
+          ("ul>li*5" "<ul>\n  <li>@N</li>\n  <li>@N</li>\n  <li>@N</li>\n  <li>@N</li>\n  <li>@N</li>\n</ul>\n")
+          ("ul>li.item$*5" "<ul>\n  <li class=\"item1\">@N</li>\n  <li class=\"item2\">@N</li>\n  <li class=\"item3\">@N</li>\n  <li class=\"item4\">@N</li>\n  <li class=\"item5\">@N</li>\n</ul>\n")
+          ("h$[title=item$]{Header $}*3" "<h1 title=item1>Header 1</h1>\n<h2 title=item2>Header 2</h2>\n<h3 title=item3>Header 3</h3>\n")
+          ("#page>div.logo+ul#navigation>li*5>a{Item $}" "<div id=\"page\">\n  <div class=\"logo\">@N</div>\n  <ul id=\"navigation\">\n    <li><a href=\"\">Item 1</a></li>\n    <li><a href=\"\">Item 2</a></li>\n    <li><a href=\"\">Item 3</a></li>\n    <li><a href=\"\">Item 4</a></li>\n    <li><a href=\"\">Item 5</a></li>\n  </ul>\n</div>\n")
+          ("ul>li.item$$$*5" "<ul>\n  <li class=\"item001\">@N</li>\n  <li class=\"item002\">@N</li>\n  <li class=\"item003\">@N</li>\n  <li class=\"item004\">@N</li>\n  <li class=\"item005\">@N</li>\n</ul>\n")
+          ("ul>li.item$@-*5" "<ul>\n  <li class=\"item5\">@N</li>\n  <li class=\"item4\">@N</li>\n  <li class=\"item3\">@N</li>\n  <li class=\"item2\">@N</li>\n  <li class=\"item1\">@N</li>\n</ul>\n")
+          ("ul>li.item$@3*5" "<ul>\n  <li class=\"item3\">@N</li>\n  <li class=\"item4\">@N</li>\n  <li class=\"item5\">@N</li>\n  <li class=\"item6\">@N</li>\n  <li class=\"item7\">@N</li>\n</ul>\n")
+          ("ul>li.item$@-3*5" "<ul>\n  <li class=\"item7\">@N</li>\n  <li class=\"item6\">@N</li>\n  <li class=\"item5\">@N</li>\n  <li class=\"item4\">@N</li>\n  <li class=\"item3\">@N</li>\n</ul>\n")
+          ("#header" "<div id=\"header\">@N</div>\n")
+          (".title" "<div class=\"title\">@N</div>\n")
+          ("form#search.wide" "<form id=\"search\" class=\"wide\" action=\"\">@N</form>\n")
+          ("p.class1.class2.class3" "<p class=\"class1 class2 class3\">@N</p>\n")
+          ("p[title=\"Hello world\"]" "<p title=\"Hello world\">@N</p>\n")
+          ("td[rowspan=2 colspan=3 title]" "<td rowspan=2 colspan=3 title>@N</td>\n")
+          ("[a='value1' b=\"value2\"]" "<div a='value1' b=\"value2\">@N</div>\n")
+          ("a{Click me}" "<a href=\"\">Click me</a>")
+          ("p>{Click }+a{here}+{ to continue}" "<p>Click <a href=\"\">here</a> to continue</p>\n")
+          (".class" "<div class=\"class\">@N</div>\n")
+          ("em>.class" "<em><span class=\"class\">@N</span></em>")
+          ("ul>.class" "<ul>\n  <li class=\"class\">@N</li>\n</ul>\n")
+          ("table>.row>.col" "<table>\n  <tr class=\"row\">\n    <td class=\"col\">@N</td>\n  </tr>\n</table>\n")
+          ))
+  (setf success 0)
+  (setf failed 0)
+  (dolist (onetest tests)
+    (let ((test (equal (zen-expand (car onetest)) (cadr onetest))))
+      (if (not test) (princ (concat "FAILED:" (car onetest) "\n")))
+      (if test
+          (setf success (+ 1 success))
+        (setf failed (+ 1 failed)))))
+  (list success failed))

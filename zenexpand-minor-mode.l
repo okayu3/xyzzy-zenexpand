@@ -129,13 +129,20 @@
 ;;	# http://www.otchy.net
 ;;
 ;; ■変更履歴
+;;	[2014/03/31]
+;;		・zen-codeに日本語など多バイト文字があるとindentがずれる問題に対処。
+;;		  length と count-column の使い方を学ぶ。
+;;		・select は inline要素だけども HTMLコーディング上は Listと同じような書き方が想定されるので、
+;;		  inline要素判定からはずす。(インデント処理上は block-level要素のように扱う)
+;;		・numberingの[子要素への波及]機能のdebug
 ;;	[2014/03/30]
 ;;		・class/id/text以外の任意の箇所(タグ名/属性)でのナンバリング。また子供への波及。
 ;;		  "h$*3" とか。"ul>li*5>a{Item $}" とか (タグ名や子供への波及)。
 ;;		・implicit tag の包括的解決。implicit tag利用時にインデントがうまくいかなかった件の解消
 ;;		・unit test 作成 [zen-test]
+;;		・2ch で 試してもらった感想をもらって大喜びする。
 ;;	[2014/03/29]
-;;		・Git 導入。 codebreakにて公開しました。
+;;		・Git 導入。 codebreak, github にて公開しました。
 ;;	[2014/03/28]
 ;;		・改行ルールを、google html style guide に従うように変更。
 ;;			(要は inline要素以外は new lineにしようね、って仕様です。)
@@ -165,7 +172,7 @@
 ;; ■License
 ;;	翻訳元に倣い、MITライセンスです。
 ;;
-;;	Copyright (c) 2014 Satoshi Moriwaki
+;;	Copyright (c) 2014 Okayu3
 ;;	Released under the MIT license
 ;;	http://opensource.org/licenses/mit-license.php
 ;;
@@ -220,7 +227,9 @@
 (defvar *zenexpand-inline-elements* nil)
 (unless *zenexpand-inline-elements*
   (setq *zenexpand-inline-elements* (make-hash-table :test #'equalp))
-  (setq base "b,big,i,small,tt,abbr,acronym,cite,code,dfn,em,kbd,strong,samp,var,a,bdo,br,img,map,object,q,script,span,sub,sup,button,input,label,select,textarea")
+;;  (setq base "b,big,i,small,tt,abbr,acronym,cite,code,dfn,em,kbd,strong,samp,var,a,bdo,br,img,map,object,q,script,span,sub,sup,button,input,label,select,textarea")
+;;  inline要素だけど block-level要素のような codingが想定される ものをはずす [select]
+  (setq base "b,big,i,small,tt,abbr,acronym,cite,code,dfn,em,kbd,strong,samp,var,a,bdo,br,img,map,object,q,script,span,sub,sup,button,input,label,textarea")
   (dolist (one (split-string base ","))
     (setf (gethash one *zenexpand-inline-elements*) 1))
   )
@@ -413,8 +422,8 @@
   (interactive)
   (let* (
          (input (zen-pick-previous-word))
-         (len-real (length (substitute-string (or input "") "_@_" " ")))
-         (setback (- (current-column) len-real))
+         (input-real (substitute-string (or input "") "_@_" " "))
+         (setback (- (current-column) (count-column input-real)))
          (expand-str (zen-expand input))
          (loc (point))
          )
@@ -423,7 +432,7 @@
           (interactive)
           (if (string-match "\n$" expand-str) (setf expand-str (substitute-string expand-str "\n$" "")))
           (setf expand-str (zen-item-indent-local expand-str setback t))
-          (backward-delete-char-untabify len-real)
+          (backward-delete-char-untabify (length input-real))
           (when (not *zenexpand-silent*)
             (insert (concat "<!-- " (substitute-string (or input "") "_@_" " ") "-->"))
             (if (not (string-match "^\n" expand-str)) (insert "\n")))
@@ -445,8 +454,8 @@
   (interactive)
   (let* (
          (input (zen-pick-previous-word))
-         (len-real (length (substitute-string (or input "") "_@_" " ")))
-         (setback (- (current-column) len-real))
+         (input-real (substitute-string (or input "") "_@_" " "))
+         (setback (- (current-column) (count-column input-real)))
          (expand-str (zen-expand input))
          (loc (point))
          )
@@ -455,7 +464,7 @@
           (interactive)
           (if (string-match "\n$" expand-str) (setf expand-str (substitute-string expand-str "\n$" "")))
           (setf expand-str (zen-item-indent-local expand-str setback t))
-          (backward-delete-char-untabify len-real)
+          (backward-delete-char-untabify (length input-real))
           (when (not *zenexpand-silent*)
             (insert (concat "<!-- " (substitute-string (or input "") "_@_" " ") "-->"))
             (if (not (string-match "^\n" expand-str)) (insert "\n")))
@@ -556,7 +565,7 @@
 
 ;;入力を zen-code的に正しく 字句解析します。
 (defun zen-lexer (input)
-  (setf input (ch-empty input))
+  (setf input (zen-ch-empty input))
   (let* ((token "")
          (lst-token '())
          (lst-flg-text '())
@@ -808,19 +817,19 @@
              (dolist (one children)
                (setf ans (concat ans (zen-item-tostring one nm scale-val))))))
           ((equal "ELEMENT" typ)
-           (if (> scale-val 0)
+           (if (> scale-val 1)
                (progn
                  (dotimes (i scale-val)
-                   (setf ans (concat ans (zen-item-tostring-detail itm (+ i 1) scale-val parent-nm parent-cnt)))
+                   (setf ans (concat ans (zen-item-tostring-detail itm (+ i 1) scale-val parent-nm -1)))
                    )
                  )
-             (setf ans (concat ans (zen-item-tostring-detail itm -1 -1 parent-nm parent-cnt)))
+             (setf ans (concat ans (zen-item-tostring-detail itm -1 1 parent-nm parent-cnt)))
              ))
           ((equal "GROUP" typ)
            (let ((children (reverse (aref itm 6))))
              (dotimes (i scale-val)
                (dolist (one children)
-                 (setf ans (concat ans (zen-item-tostring one nm i)))
+                 (setf ans (concat ans (zen-item-tostring one nm (+ i 1))))
                  ))))
       )
     ans)
@@ -846,30 +855,38 @@
          )
 ;;    (setf flg-inline nil)
     ;;(format nil "~VA" setback " ")
+    ;;タグ開始
     (when nm
       (setf nm (zen-item-resolve-dollar nm cnt scale-val parent-cnt))
       (setf ans (concat "<" nm)))
+    ;;id
     (if id
         (setf ans (concat ans " id=\"" (zen-item-dsc-id itm cnt scale-val parent-cnt) "\"")))
+    ;;class
     (if (> (length lst-class) 0)
         (setf ans (concat ans " class=\"" (zen-item-dsc-class itm cnt scale-val parent-cnt) "\"")))
+    ;;その他属性
     (if attr
         (setf ans (concat ans " " attr)))
+    ;;カスタム属性
     (if (> (length lst-cattr) 0)
         (dolist (one-cattr lst-cattr)
           (setf one-cattr (substitute-string one-cattr "_@_" " "))
           (setf one-cattr (zen-item-resolve-dollar one-cattr cnt scale-val parent-cnt))
           (setf ans (concat ans " " one-cattr))))
+    ;;単体タグはここで終了
     (when (zen-is-single nm)
       (setf ans (concat ans " />"))
       (when (or (not flg-inline) (equal nm "br"))
         (setf ans (concat ans "\n")))
       (return-from zen-item-tostring-detail ans))
+    ;;開始タグを閉じる
     (when nm
       (setf ans (concat ans ">")))
     
     (when (and (not flg-inline) flg-has-block-child)
       (setf ans (concat ans "\n")))
+    ;;テキスト
     (when (> (length lst-text) 0)
       (dolist (one-text lst-text)
         (setf one-text (substitute-string one-text "_@_" " "))
@@ -879,6 +896,7 @@
                      "\n"
                    ""))
         (setf ans (concat ans one-text cr))))
+    ;;子ノードの展開
 ;;     (dolist (one children)
 ;;       (let ((child-dsc (zen-item-tostring one nm)))
 ;;         (setf ans (concat ans child-dsc)))
@@ -894,25 +912,29 @@
                    ""))
         (setf ans (concat ans child-dsc cr))))
     
+    ;;テキストも子ノードもなければ、カーソルジャンプ地点の候補になる(scriptタグを除く)
     (if (and (not (equal nm "script"))
              (= (length lst-text) 0)
              (= (length children) 0))
         (setf ans (concat ans "@N")))
-
-    
+    ;;終了タグ
     (if nm
         (setf ans (concat ans "</" nm  ">")))
+    ;;インデントと最後の改行(非inline要素)
     (when (not flg-inline)
       (setf ans (zen-item-indent-local ans 2 nil))
       (setf ans (concat ans "\n"))
       )
-
-    
     (return-from zen-item-tostring-detail ans)
     )
   nil
   )
 
+;;字下げを行います。
+;;input    対象
+;;setback  字下げ数
+;;force      t: 全体を字下げ
+;;         nil: 最後の行だけ字下げしない
 (defun zen-item-indent-local (input setback force)
   (setf ans nil)
   (if (or (null input) (= setback 0))
@@ -1031,7 +1053,7 @@
     )
   )
 
-
+;;implicit tagの解決
 (defun zen-item-resolve-implicit-tag (itm parent-nm)
   (let ((nm-base (aref itm 1))
         (id (aref itm 2))
@@ -1098,13 +1120,13 @@
         )
     (goto-char posnow)
     (setf aa (buffer-substring posbol posnow))
-    (setf aa (ch-empty aa))
+    (setf aa (zen-ch-empty aa))
     (string-match "\\([^ ]+\\)$" aa)
     (match-string 1)))
 
 ;; [],{}に囲まれた中の文字列の空白文字を "_@_" に escapeする
 ;; 2014/03/26(Wed) [custom attributes] {text} にも対応
-(defun ch-empty (input)
+(defun zen-ch-empty (input)
   (setf start 0)
   (while (setf start (string-match "\\[[^\]]+\\]" input start))
     (let* ((matched (match-string 0))
